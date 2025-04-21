@@ -11,6 +11,6 @@
         "phaser": "^3.55.2"
     },
     "devDependencies": {
-        "rimraf": "^5.0.5"
+        "rimraf": "^5.0.10"
     }
 }
