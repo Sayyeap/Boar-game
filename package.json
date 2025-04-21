@@ -4,10 +4,13 @@
     "description": "A Phaser game with boars and upgrades",
     "scripts": {
         "start": "live-server --port=8080",
-        "build": "if exist dist rmdir /s /q dist && mkdir dist && copy index.html dist\\index.html && xcopy src dist\\src /E /I /Y && xcopy assets dist\\assets /E /I /Y"
+        "build": "rimraf dist && mkdir dist && cp index.html dist/index.html && cp -r src dist/src && cp -r assets dist/assets && echo Assets copied successfully"
     },
     "dependencies": {
         "live-server": "^1.2.2",
         "phaser": "^3.55.2"
+    },
+    "devDependencies": {
+        "rimraf": "^5.0.5"
     }
 }
