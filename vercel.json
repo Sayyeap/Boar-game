@@ -1,0 +1,22 @@
+{
+    "builds": [
+        {
+            "src": "index.html",
+            "use": "@vercel/static"
+        }
+    ],
+    "outputDirectory": "dist",
+    "routes": [
+        {
+            "src": "/assets/(.*)",
+            "dest": "/dist/assets/$1",
+            "headers": {
+                "Cache-Control": "no-store, no-cache, must-revalidate"
+            }
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/dist/$1"
+        }
+    ]
+}
