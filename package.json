@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "description": "A Phaser game with boars and upgrades",
     "scripts": {
-        "start": "live-server --port=8080"
+        "start": "live-server --port=8080",
+        "build": "mkdir -p dist && cp -r index.html src/ assets/ dist/"
     },
     "dependencies": {
         "live-server": "^1.2.2",
