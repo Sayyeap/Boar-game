@@ -12,7 +12,7 @@ class MainScene extends Phaser.Scene {
     preload() {
         console.log('MainScene: Preload started');
         try {
-            this.load.image('ground', 'assets/Ground.gif');
+            this.load.image('ground', 'assets/GreenHills.gif');
             this.load.image('skybox', 'assets/Skybox.gif');
             this.load.spritesheet('player', 'assets/WomanFighterSprites-Sheet.png', {
                 frameWidth: 142,
@@ -26,7 +26,7 @@ class MainScene extends Phaser.Scene {
             this.load.image('coinValueIcon', 'assets/CoinValueIcon.jpg');
             this.load.image('upgradeGreen', 'assets/UpgradeGreen.png');
             this.load.image('upgradeRed', 'assets/UpgradeRed.png');
-            this.load.image('close', 'assets/сlose.png');
+            this.load.image('close', 'assets/CloseMenu.png');
             this.load.spritesheet('tapButton', 'assets/TapButton.png', { frameWidth: 16, frameHeight: 16 });
             console.log('MainScene: Preload completed');
         } catch (e) {
