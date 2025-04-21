@@ -4,7 +4,7 @@
     "description": "A Phaser game with boars and upgrades",
     "scripts": {
         "start": "live-server --port=8080",
-        "build": "mkdir -p dist && cp index.html dist/ && cp -r src/ dist/src && cp -r assets/ dist/assets"
+        "build": "if exist dist rmdir /s /q dist && mkdir dist && copy index.html dist\\index.html && xcopy src dist\\src /E /I /Y && xcopy assets dist\\assets /E /I /Y"
     },
     "dependencies": {
         "live-server": "^1.2.2",
