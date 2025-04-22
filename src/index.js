@@ -5,7 +5,7 @@ const tg = initTelegramWebApp();
 
 // Конфигурация Phaser
 const config = {
-    type: Phaser.AUTO,
+    type: Phaser.CANVAS,
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',
