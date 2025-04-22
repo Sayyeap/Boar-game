@@ -16,7 +16,7 @@ class MainScene extends Phaser.Scene {
             this.load.image('skybox', 'assets/Skybox.gif');
             this.load.spritesheet('player', 'assets/WomanFighterSprites.png', {
                 frameWidth: 142,
-                frameHeight: 100
+                frameHeight: 88
             });
             this.load.spritesheet('boar', 'assets/BrownBoar.png', { frameWidth: 48, frameHeight: 32 });
             this.load.image('coinCount', 'assets/CoinCount.png');
