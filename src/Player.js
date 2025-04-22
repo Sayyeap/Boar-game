@@ -2,7 +2,7 @@ class Player {
     constructor(scene, x, y, groundHeight) {
         this.scene = scene;
         this.groundHeight = groundHeight;
-        this.groundY = scene.game.config.height - groundHeight; // Синхронизируем с height - 360
+        this.groundY = scene.game.config.height - groundHeight;
 
         this.sprite = scene.physics.add.sprite(x, this.groundY, 'player')
             .setScale(2)
@@ -10,28 +10,24 @@ class Player {
             .setCollideWorldBounds(false)
             .setSize(35, 72)
             .setOffset(53.5, 28);
+        this.sprite.body.gravity.y = 4500; // Гравитация только для игрока
         this.sprite.setVelocityY(0);
         this.sprite.y = this.groundY;
 
-        try {
-            this.sprite.anims.play('walk', true);
-            console.log('Player: walk animation started');
-        } catch (e) {
-            console.error('Player: Error starting walk animation', e);
-        }
+        this.sprite.anims.play('walk', true);
 
         this.isInputEnabled = true;
         this.coinsCollected = 0;
         this.isJumping = false;
         this.isHoldingJump = false;
-        this.jumpPower = 400;
-        this.maxJumpPower = 500;
-        this.boostPower = 100;
-        this.jumpChargeTime = 200;
+        this.jumpPower = 1000; // Базовая сила прыжка
+        this.maxJumpPower = 2000; // Максимальная скорость прыжка
+        this.boostPower = 700; // Максимальный прирост для высоты
+        this.jumpChargeTime = 115; // Время для буста
         this.jumpStartTime = 0;
         this.isAttacking = false;
+        this.jumpTimer = null; // Таймер для буста
 
-        // Обработка ввода для прыжков
         this.setupInput();
     }
 
@@ -40,124 +36,118 @@ class Player {
         this.scene.input.off('pointerup');
         this.scene.input.on('pointerdown', () => {
             if (this.isInputEnabled && !this.scene.isGamePaused) {
-                console.log('Player: Pointer down detected');
+                console.log('Player: pointerdown received');
                 this.startJump();
             } else {
-                console.log('Jump input ignored: isInputEnabled=' + this.isInputEnabled + ', isGamePaused=' + this.scene.isGamePaused);
+                console.log('Player: pointerdown blocked', {
+                    isInputEnabled: this.isInputEnabled,
+                    isGamePaused: this.scene.isGamePaused
+                });
             }
         });
         this.scene.input.on('pointerup', () => {
             if (this.isInputEnabled) {
+                console.log('Player: pointerup received');
                 this.endJump();
+            } else {
+                console.log('Player: pointerup blocked', { isInputEnabled: this.isInputEnabled });
             }
         });
-        console.log('Player: Input handlers set up');
     }
 
     startJump() {
         if (!this.isInputEnabled || this.isJumping || this.sprite.y < this.groundY - 5) {
-            console.log('Jump skipped: isInputEnabled=' + this.isInputEnabled + ', isJumping=' + this.isJumping + ', y=' + this.sprite.y + ', groundY=' + this.groundY);
+            console.log('Player: startJump blocked', {
+                isInputEnabled: this.isInputEnabled,
+                isJumping: this.isJumping,
+                y: this.sprite.y,
+                groundY: this.groundY
+            });
             return;
         }
         this.isJumping = true;
         this.isHoldingJump = true;
         this.jumpStartTime = this.scene.time.now;
-        this.sprite.setVelocityY(-this.jumpPower);
+        this.sprite.setVelocityY(-this.jumpPower); // Базовый прыжок
         this.sprite.anims.play('jump_up', true);
-        console.log('Player: Jump started, velocityY=' + this.sprite.body.velocity.y + ', y=' + this.sprite.y);
+        console.log('Player: startJump, velocity.y=', this.sprite.body.velocity.y);
+
+        // Запускаем таймер для буста
+        this.jumpTimer = this.scene.time.delayedCall(this.jumpChargeTime, () => {
+            if (this.isJumping && this.isHoldingJump) {
+                const chargeTime = Math.min(this.scene.time.now - this.jumpStartTime, this.jumpChargeTime);
+                const boostFactor = chargeTime / this.jumpChargeTime; // 0 to 1
+                const boost = this.boostPower * boostFactor; // Прирост скорости
+                const newVelocity = Math.max(-(this.jumpPower + boost), -this.maxJumpPower);
+                this.sprite.setVelocityY(newVelocity);
+                console.log(`Player: Jump boost applied: chargeTime=${chargeTime}, boostFactor=${boostFactor}, boost=${boost}, velocity.y=${newVelocity}, y=${this.sprite.y}`);
+            }
+            this.jumpTimer = null;
+        }, [], this);
     }
 
     endJump() {
+        if (this.isHoldingJump && this.jumpTimer) {
+            this.scene.time.removeEvent(this.jumpTimer); // Отменяем таймер
+            const chargeTime = Math.min(this.scene.time.now - this.jumpStartTime, this.jumpChargeTime);
+            const boostFactor = chargeTime / this.jumpChargeTime; // 0 to 1
+            const boost = this.boostPower * boostFactor; // Прирост скорости
+            const newVelocity = Math.max(-(this.jumpPower + boost), -this.maxJumpPower);
+            this.sprite.setVelocityY(newVelocity);
+            console.log(`Player: Jump boost applied on release: chargeTime=${chargeTime}, boostFactor=${boostFactor}, boost=${boost}, velocity.y=${newVelocity}, y=${this.sprite.y}`);
+            this.jumpTimer = null;
+        }
         this.isHoldingJump = false;
+        console.log('Player: endJump, chargeTime=', this.scene.time.now - this.jumpStartTime);
     }
 
     attack(enemy) {
         if (this.isAttacking) {
-            console.log('Player: Attack skipped, already attacking');
             return;
         }
         this.isAttacking = true;
-        try {
-            console.log('Player: Attempting to play attack animation (frames 8-16)');
-            this.sprite.anims.play('attack', true);
-            console.log('Player: Attack animation started');
+        this.sprite.anims.play('attack', true);
 
-            // Наносим урон через 400 мс
-            if (enemy && enemy.isAlive) {
-                this.scene.time.delayedCall(400, () => {
-                    if (enemy && enemy.isAlive) {
-                        enemy.takeDamage(1);
-                        console.log('Player: Damage dealt to enemy at 400ms');
-                    } else {
-                        console.log('Player: Damage skipped, enemy invalid or dead');
-                    }
-                });
-            } else {
-                console.log('Player: Damage skipped, no valid enemy');
-            }
-
-            this.sprite.once('animationcomplete', () => {
-                console.log('Player: Attack animation completed');
-                this.isAttacking = false;
-                if (this.sprite.y >= this.groundY - 5 && (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== 'jump_up' && this.sprite.anims.currentAnim.key !== 'jump_down')) {
-                    this.sprite.anims.play('idle', true);
-                    console.log('Player: Returned to idle animation');
+        if (enemy && enemy.isAlive) {
+            this.scene.time.delayedCall(400, () => {
+                if (enemy && enemy.isAlive) {
+                    enemy.takeDamage(1);
                 }
             });
-        } catch (e) {
-            console.error('Player: Error playing attack animation', e);
-            this.isAttacking = false;
-            this.sprite.anims.play('idle', true);
         }
+
+        this.sprite.once('animationcomplete', () => {
+            this.isAttacking = false;
+            if (this.sprite.y >= this.groundY - 5 && (!this.sprite.anims.currentAnim || !['jump_up', 'jump_down'].includes(this.sprite.anims.currentAnim.key))) {
+                this.sprite.anims.play('idle', true);
+            }
+        });
     }
 
-    update() {
+    update(time, delta) {
         if (!this.isInputEnabled) {
             this.sprite.setVelocityY(0);
             this.sprite.y = this.groundY;
             if (!this.isAttacking && (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== 'idle')) {
                 this.sprite.anims.play('idle', true);
-                console.log('Player: Switched to idle animation (input disabled)');
             }
-            console.log(`Player: Position y=${this.sprite.y}, groundY=${this.groundY}, isInputEnabled=${this.isInputEnabled}, body.enable=${this.sprite.body.enable}`);
+            console.log('Player: Input disabled, y=', this.sprite.y, 'velocity.y=', this.sprite.body.velocity.y);
             return;
         }
 
-        if (this.isJumping && this.isHoldingJump && this.sprite.body.velocity.y < 0) {
-            const chargeTime = Math.min(this.scene.time.now - this.jumpStartTime, this.jumpChargeTime);
-            if (chargeTime < this.jumpChargeTime) {
-                this.sprite.setVelocityY(this.sprite.body.velocity.y - this.boostPower);
-                console.log('Player: Jump boosted, velocityY=' + this.sprite.body.velocity.y);
-            } else {
-                this.isHoldingJump = false;
-            }
+        if (this.isAttacking) {
+            return;
         }
 
-        try {
-            if (this.isAttacking) {
-                console.log('Player: Update skipped, attack animation in progress');
-                return;
+        // Анимации
+        if (this.sprite.y < this.groundY - 10) {
+            if (this.sprite.body.velocity.y < 0 && (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== 'jump_up')) {
+                this.sprite.anims.play('jump_up', true);
+            } else if (this.sprite.body.velocity.y > 0 && (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== 'jump_down')) {
+                this.sprite.anims.play('jump_down', true);
             }
-            if (this.sprite.y < this.groundY - 10) {
-                if (this.sprite.body.velocity.y < 0) {
-                    if (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== 'jump_up') {
-                        this.sprite.anims.play('jump_up', true);
-                        console.log('Player: Switched to jump_up animation');
-                    }
-                } else if (this.sprite.body.velocity.y > 0) {
-                    if (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== 'jump_down') {
-                        this.sprite.anims.play('jump_down', true);
-                        console.log('Player: Switched to jump_down animation');
-                    }
-                }
-            } else {
-                if (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== 'walk') {
-                    this.sprite.anims.play('walk', true);
-                    console.log('Player: Switched to walk animation');
-                }
-            }
-        } catch (e) {
-            console.error('Player: Error in animation switch', e);
+        } else if (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== 'walk') {
+            this.sprite.anims.play('walk', true);
         }
 
         // Сброс прыжка
@@ -166,18 +156,34 @@ class Player {
             this.sprite.y = this.groundY;
             this.isJumping = false;
             this.isHoldingJump = false;
-            console.log('Player: Jump reset, y=' + this.sprite.y + ', velocityY=' + this.sprite.body.velocity.y);
+            if (this.jumpTimer) {
+                this.scene.time.removeEvent(this.jumpTimer);
+                this.jumpTimer = null;
+            }
+            console.log('Player: Jump reset, y=', this.sprite.y);
         }
 
         // Защита от проваливания
         if (this.sprite.y > this.groundY + 5) {
             this.sprite.y = this.groundY;
             this.sprite.setVelocityY(0);
-            console.log('Player: Prevented falling through ground, y=' + this.sprite.y);
+            console.log('Player: Prevented falling, y=', this.sprite.y);
+        }
+
+        // Защита от улёта
+        if (this.sprite.y < -500) {
+            this.sprite.y = -500;
+            this.sprite.setVelocityY(0);
+            this.isJumping = false;
+            this.isHoldingJump = false;
+            if (this.jumpTimer) {
+                this.scene.time.removeEvent(this.jumpTimer);
+                this.jumpTimer = null;
+            }
+            console.log('Player: Hit height limit, y=', this.sprite.y);
         }
 
         this.sprite.x = Math.min(150, this.scene.cameras.main.width - 20);
-        console.log(`Player: Position y=${this.sprite.y}, groundY=${this.groundY}, isInputEnabled=${this.isInputEnabled}, body.enable=${this.sprite.body.enable}`);
     }
 
     updateGroundY(newHeight) {
@@ -185,8 +191,8 @@ class Player {
         if (!this.isJumping || !this.isInputEnabled) {
             this.sprite.y = this.groundY;
             this.sprite.setVelocityY(0);
+            console.log('Player: Updated groundY, y=', this.sprite.y);
         }
-        console.log(`Player: Ground updated, y=${this.sprite.y}, groundY=${this.groundY}`);
     }
 
     upgradeJumpPower(newPower) {
@@ -198,7 +204,11 @@ class Player {
         this.sprite.body.enable = false;
         this.sprite.setVelocityY(0);
         this.sprite.y = this.groundY;
-        console.log('Player: Input disabled, fixed at y=' + this.sprite.y);
+        if (this.jumpTimer) {
+            this.scene.time.removeEvent(this.jumpTimer);
+            this.jumpTimer = null;
+        }
+        console.log('Player: Input disabled');
     }
 
     enableInput() {
@@ -207,7 +217,7 @@ class Player {
         this.sprite.setVelocityY(0);
         this.sprite.y = this.groundY;
         this.setupInput();
-        console.log('Player: Input enabled, y=' + this.sprite.y + ', body.enable=' + this.sprite.body.enable);
+        console.log('Player: Input enabled');
     }
 
     collectCoin() {}

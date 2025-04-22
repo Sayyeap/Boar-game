@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Idle Slayer</title>
-    <meta name="viewport" content="width=400, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boar Game</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -14,56 +16,19 @@
         }
         canvas {
             display: block;
-            width: 100%;
-            height: 100%;
+            image-rendering: pixelated;
+            transform: none !important;
+            scale: 1 !important;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Game</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+    <div id="game-container"></div>
     <script src="src/Player.js"></script>
     <script src="src/Background.js"></script>
-    <script src="src/MainScene.js"></script>
-    <script src="src/game.js"></script>
     <script src="src/UpgradeMenu.js"></script>
     <script src="src/Enemy.js"></script>
-    <script>
-        WebFont.load({
-            google: {
-                families: ['Press Start 2P']
-            },
-            active: function() {
-                console.log('Fonts loaded');
-                const config = {
-                    type: Phaser.CANVAS,
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    physics: {
-                        default: 'arcade',
-                        arcade: {
-                            gravity: { y: 1000 },
-                            debug: false
-                        }
-                    },
-                    scene: [MainScene],
-                    scale: {
-                        mode: Phaser.Scale.RESIZE,
-                        autoCenter: Phaser.Scale.CENTER_BOTH
-                    }
-                };
-                const game = new Phaser.Game(config);
-            },
-            inactive: function() {
-                console.error('Font loading failed');
-            }
-        });
-    </script>
-    <div id="game-container"></div>
-    <script src="index.js"></script>
+    <script src="src/MainScene.js"></script>
+    <script src="src/index.js"></script>
 </body>
 </html>

@@ -1,23 +1,25 @@
-import { initTelegramWebApp } from './telegram.js';
-
-// Инициализация Telegram WebApp
-const tg = initTelegramWebApp();
-
 // Конфигурация Phaser
 const config = {
-    type: Phaser.CANVAS,
+    type: Phaser.WEBGL, // Для снижения лагов
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',
-    scene: [MainScene],
+    pixelArt: true,
+    antialias: false,
+    roundPixels: true,
     physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 300 }, debug: false }
+        arcade: {
+            gravity: { y: 0 }, // Глобальная гравитация отключена
+            debug: false
+        }
     },
-    scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    }
+    scene: [MainScene]
 };
 
 const game = new Phaser.Game(config);
+
+// Отладка FPS
+game.events.on('postupdate', (time, delta) => {
+    console.log('Game Loop FPS:', 1000 / delta);
+});
