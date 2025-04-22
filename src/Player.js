@@ -20,8 +20,8 @@ class Player {
         this.coinsCollected = 0;
         this.isJumping = false;
         this.isHoldingJump = false;
-        this.jumpPower = 1000; // Базовая сила прыжка
-        this.maxJumpPower = 2000; // Максимальная скорость прыжка
+        this.jumpPower = 950; // Базовая сила прыжка
+        this.maxJumpPower = 1800; // Максимальная скорость прыжка
         this.boostPower = 700; // Максимальный прирост для высоты
         this.jumpChargeTime = 115; // Время для буста
         this.jumpStartTime = 0;

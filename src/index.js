@@ -1,6 +1,6 @@
 // Конфигурация Phaser
 const config = {
-    type: Phaser.WEBGL, // Для снижения лагов
+    type: Phaser.CANVAS, // Для снижения лагов
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',
